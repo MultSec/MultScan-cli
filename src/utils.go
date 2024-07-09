@@ -2,10 +2,18 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	"io/ioutil"
+	"encoding/json"
 
 	"github.com/mgutz/ansi"
 )
 
+// Define a struct for the known parts of the JSON structure
+type Machine struct {
+    MachineIP   string `json:"machine_ip"`
+    MachineName string `json:"machine_name"`
+}
 
 type Log int64
 
@@ -39,11 +47,41 @@ func printLog(log Log, text string) {
 	}
 }
 
-// Function to get vms from the server
-func getVMs(ip string, port int) error {
+// Function to get machines from the server
+func getMachines(ip string, port int) ([]Machine, error) {
+	var machines []Machine
 
 	printLog(logInfo, fmt.Sprintf("%s %s", ansi.ColorFunc("default+hb")("Server IP: "), ansi.ColorFunc("cyan")(ip)))
 	printLog(logInfo, fmt.Sprintf("%s %s", ansi.ColorFunc("default+hb")("Server Port: "), ansi.ColorFunc("cyan")(fmt.Sprintf("%d", port))))
 
-	return nil
+	url := fmt.Sprintf("http://%s:%d/api/v1/machines", ip, port)
+	resp, err := http.Get(url)
+	if err != nil {
+		return machines, fmt.Errorf("failed to fetch machines: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return machines, fmt.Errorf("server returned non-200 status: %d %s", resp.StatusCode, resp.Status)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return machines, fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	if err := json.Unmarshal(body, &machines); err != nil {
+		return machines, fmt.Errorf("failed to parse known parts of JSON: %v", err)
+	}
+
+	return machines, nil
+}
+
+// Function to display machines in a readable format
+func displayMachines(machines []Machine) {
+	printLog(logInfo, "Retrieved machines from server")
+	for _, machine := range machines {
+		printLog(logSection, fmt.Sprintf("%s:", ansi.ColorFunc("default+hb")(machine.MachineName)))
+		printLog(logSubSection, fmt.Sprintf("%s", ansi.ColorFunc("cyan")(machine.MachineIP)))
+    }
 }

@@ -13,8 +13,8 @@ func main() {
 
         Commands: []*cli.Command{
             {
-                Name:  "vms",
-                Usage: "Retrieve list of vms present",
+                Name:  "machines",
+                Usage: "Retrieve list of machines present",
 
                 Flags: []cli.Flag{
                     &cli.StringFlag{
@@ -27,18 +27,20 @@ func main() {
                     &cli.IntFlag{
                         Name:        "port",
                         Aliases:     []string{"p"},
-                        Value:       5000,
+                        Value:       8000,
                         Usage:       "Use provided `PORT` for the MultScan server",
-                        DefaultText: "5000",
+                        DefaultText: "8000",
                     },
                 },
                 Action: func(ctx *cli.Context) error {
-                    err  := getVMs(ctx.String("server"), ctx.Int("port"))
+                    machines, err  := getMachines(ctx.String("server"), ctx.Int("port"))
 
                     if err != nil {
                         printLog(logError, fmt.Sprintf("%v", err))
                         return nil
                     }
+
+                    displayMachines(machines)
 
                     return nil
                 },
@@ -58,9 +60,9 @@ func main() {
                     &cli.IntFlag{
                         Name:        "port",
                         Aliases:     []string{"p"},
-                        Value:       5000,
+                        Value:       8000,
                         Usage:       "Use provided `PORT` for the MultScan server",
-                        DefaultText: "5000",
+                        DefaultText: "8000",
                     },
                     &cli.StringFlag{
                         Name:        "exe",
@@ -70,7 +72,7 @@ func main() {
                     },
                 },
                 Action: func(ctx *cli.Context) error {
-                    err  := getVMs(ctx.String("server"), ctx.Int("port"))
+                    _, err  := getMachines(ctx.String("server"), ctx.Int("port"))
 
                     if err != nil {
                         printLog(logError, fmt.Sprintf("%v", err))
