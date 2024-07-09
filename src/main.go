@@ -65,20 +65,29 @@ func main() {
                         DefaultText: "8000",
                     },
                     &cli.StringFlag{
-                        Name:        "exe",
+                        Name:        "sample",
                         Aliases:     []string{"e"},
-                        Usage:       "Executable to be scanned `FILE`",
+                        Usage:       "Sample file to be scanned `FILE`",
                         Required:    true,
                     },
                 },
                 Action: func(ctx *cli.Context) error {
-                    _, err  := getMachines(ctx.String("server"), ctx.Int("port"))
+                    sampleFile := ctx.String("sample")
 
+                    id, err := generateID()
                     if err != nil {
                         printLog(logError, fmt.Sprintf("%v", err))
                         return nil
                     }
 
+                    if sendSample(ctx.String("server"), ctx.Int("port"), id, sampleFile) != nil {
+                        return nil
+                    }
+
+                    if requestFileInfo(ctx.String("server"), ctx.Int("port"), id) != nil {
+                        return nil
+                    }
+                    
                     return nil
                 },
             },
