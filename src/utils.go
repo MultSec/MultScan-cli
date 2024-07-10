@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base32"
@@ -271,7 +270,11 @@ func requestFileInfo(ip string, port int, id string) error {
     // Show file public presence
     printLog(logSection, ansi.ColorFunc("default+hb")("Public Presence"))
     for key, value := range filetypeResponse.Info.PublicPresence {
-        printLog(logSubSection, fmt.Sprintf("%s: %s", ansi.ColorFunc("default+hb")(key) , ansi.ColorFunc("cyan")(strconv.FormatBool(value))))
+		if value {
+			printLog(logSubSection, fmt.Sprintf("%s: %s", ansi.ColorFunc("default+hb")(key) , "🟢"))
+		} else {
+			printLog(logSubSection, fmt.Sprintf("%s: %s", ansi.ColorFunc("default+hb")(key) , "🔴"))
+		}
     }
 	
 	return nil
