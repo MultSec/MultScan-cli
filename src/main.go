@@ -87,6 +87,10 @@ func main() {
                     if requestFileInfo(ctx.String("server"), ctx.Int("port"), id) != nil {
                         return nil
                     }
+
+                    if requestSampleDeletion(ctx.String("server"), ctx.Int("port"), id) != nil {
+                        return nil
+                    }
                     
                     return nil
                 },

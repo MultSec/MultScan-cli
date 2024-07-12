@@ -279,3 +279,32 @@ func requestFileInfo(ip string, port int, id string) error {
 	
 	return nil
 }
+
+/*
+func requestScanStatus(ip string, port int, id string) error {
+	sampleScanUri := fmt.Sprintf("http://%s:%d/api/v1/sample/scan/%s", ip, port, id)
+
+}
+*/
+
+func requestSampleDeletion(ip string, port int, id string) error {
+	sampleDeletionUri := fmt.Sprintf("http://%s:%d/api/v1/sample/delete/%s", ip, port, id)
+
+	// Make GET request on sampleDeletionUri
+	resp, err := http.Get(sampleDeletionUri)
+	if err != nil {
+		printLog(logError, fmt.Sprintf("%v", err))
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		printLog(logError, fmt.Sprintf("Failed to delete sample, server responded with status: %s", resp.Status))
+		return err
+	}
+
+	printLog(logInfo, fmt.Sprintf("%s", ansi.ColorFunc("default+hb")("Sample deleted successfully")))
+
+	return nil
+}
