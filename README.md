@@ -31,6 +31,7 @@ $ GOOS=darwin GOARCH=amd64 go build -o ../bin/multscan-cli_mac
 
 ## Demo
 
+https://github.com/user-attachments/assets/e9076a2a-1426-4d78-82b9-649381cd3348
 
 ## Documentation
 For more information on how to use the MultScan-cli, check the [documentation](https://multsec.github.io/docs/multscan-cli/)
