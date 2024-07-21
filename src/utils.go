@@ -30,8 +30,8 @@ type MachineStatus struct {
 
 // Define a struct for the known parts of the JSON structure
 type Machine struct {
-    MachineIP   string `json:"machine_ip"`
-    MachineName string `json:"machine_name"`
+    MachineIP   string `json:"ip"`
+    MachineName string `json:"name"`
 }
 
 // Struct to unmarshal JSON fileinfo
