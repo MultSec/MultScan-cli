@@ -9,13 +9,24 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base32"
+	"encoding/base64"
 	"encoding/binary"
     "io"
     "mime/multipart"
 	"strings"
+	"time"
 
 	"github.com/mgutz/ansi"
 )
+
+type ScanResponse struct {
+	Status map[string]MachineStatus `json:"status"`
+}
+
+type MachineStatus struct {
+	BadBytes string `json:"badBytes"`
+	Result   string `json:"result"`
+}
 
 // Define a struct for the known parts of the JSON structure
 type Machine struct {
@@ -79,6 +90,7 @@ func getMachines(ip string, port int) ([]Machine, error) {
 	if err != nil {
 		return machines, fmt.Errorf("failed to fetch machines: %v", err)
 	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -280,12 +292,78 @@ func requestFileInfo(ip string, port int, id string) error {
 	return nil
 }
 
-/*
+func printScanResults(status map[string]MachineStatus) {
+	printLog(logSuccess, fmt.Sprintf("%s", ansi.ColorFunc("default+hb")("Scan Complete")))
+	for machine, status := range status {
+		printLog(logSection, fmt.Sprintf("%s:", ansi.ColorFunc("default+hb")(machine)))
+
+		if status.Result == "Detected" {
+			printLog(logSubSection, fmt.Sprintf("%s: %s", ansi.ColorFunc("default+hb")("Result"), ansi.ColorFunc("red")("Detected")))
+		} else {
+			printLog(logSubSection, fmt.Sprintf("%s: %s", ansi.ColorFunc("default+hb")("Result"), ansi.ColorFunc("green")("Undetected")))
+		}
+
+		if status.BadBytes != "" {
+			badBytes, err := base64.StdEncoding.DecodeString(status.BadBytes)
+			if err != nil {
+				fmt.Println("Error decoding string:", err)
+				return
+			}
+
+			lines := strings.Split(string(badBytes), "\n")
+			for i := 1; i < len(lines); i++ {
+				lines[i] = "\t\t" + lines[i]
+			}
+			badBytesString := strings.Join(lines, "\n")
+
+			printLog(logSubSection, fmt.Sprintf("%s: %s", ansi.ColorFunc("default+hb")("Malicious content found at offset"), badBytesString))
+		}
+	}
+}
+
 func requestScanStatus(ip string, port int, id string) error {
 	sampleScanUri := fmt.Sprintf("http://%s:%d/api/v1/sample/scan/%s", ip, port, id)
+	
+	for {
+		resp, err := http.Get(sampleScanUri)
+		if err != nil {
+			printLog(logError, fmt.Sprintf("%v", err))
+			return err
+		}
 
+		defer resp.Body.Close()
+
+		// Read the response body
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			printLog(logError, fmt.Sprintf("Error reading response body: %v", err))
+			return err
+		}
+
+		var response ScanResponse
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			printLog(logError, fmt.Sprintf("Error parsing JSON: %v", err))
+			return err
+		}
+
+		allFinished := true
+		for _, status := range response.Status {
+			if status.Result == "Scanning" {
+				allFinished = false
+			}
+		}
+
+		if allFinished {
+			printScanResults(response.Status)
+			break
+		}
+
+		time.Sleep(10 * time.Second)  // Wait for 10 seconds before next query
+	}
+
+	return nil
 }
-*/
 
 func requestSampleDeletion(ip string, port int, id string) error {
 	sampleDeletionUri := fmt.Sprintf("http://%s:%d/api/v1/sample/delete/%s", ip, port, id)
